@@ -1,0 +1,50 @@
+# ----------------------
+# Python
+# ----------------------
+__pycache__
+.pyc
+.pyo
+.pyd
+.env
+.egg-info
+.egg
+
+# ----------------------
+# Virtual Environment
+# ----------------------
+venv
+env
+ENV
+.venv
+
+# ----------------------
+# Jupyter Notebooks checkpoints
+# ----------------------
+.ipynb_checkpoints
+
+# ----------------------
+# DVC related
+# ----------------------
+.dvc
+.dvc
+# Ignore data files if using DVC to track them
+raw
+processed
+
+# ----------------------
+# MLflow artifacts
+# ----------------------
+mlruns
+mlruns
+mlruns.trash
+
+# ----------------------
+# OS generated files
+# ----------------------
+.DS_Store
+Thumbs.db
+
+# ----------------------
+# Logs
+# ----------------------
+.log
