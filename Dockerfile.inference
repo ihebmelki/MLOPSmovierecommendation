@@ -14,6 +14,7 @@ COPY models/svd_model.pkl ./models/svd_model.pkl
 
 # Copy data needed at runtime
 COPY data/raw/ ./data/raw/
+COPY data/processed/ ./data/processed/
 
 EXPOSE 8000
 

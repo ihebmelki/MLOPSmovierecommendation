@@ -24,8 +24,8 @@ app = FastAPI(
 
 BASE_DIR = Path(__file__).resolve().parents[2]
 
-movies = pd.read_csv(BASE_DIR / "data/processed/movies_processed.csv.dvc")
-ratings = pd.read_csv(BASE_DIR / "data/processed/ratings_processed.csv.dvc")
+movies = pd.read_csv(BASE_DIR / "data/processed/movies_processed.csv")
+ratings = pd.read_csv(BASE_DIR / "data/processed/ratings_processed.csv")
 
 model_path = BASE_DIR / "models" / "svd_model.pkl"
 if not model_path.exists():

@@ -1,0 +1,14 @@
+﻿stages:
+  process_data:
+    cmd: python src/data/process_data.py
+    deps:
+    - data/raw/movies.csv
+    - data/raw/ratings.csv
+    - data/raw/links.csv
+    - data/raw/tags.csv
+    outs:
+    - data/processed/links_processed.csv
+    - data/processed/movies_processed.csv
+    - data/processed/ratings_processed.csv
+    - data/processed/ratings_with_tags.csv
+    - data/processed/user_stats.csv
