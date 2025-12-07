@@ -6,3 +6,4 @@ scikit-learn
 mlflow
 python-multipart
 joblib
+prometheus-client
