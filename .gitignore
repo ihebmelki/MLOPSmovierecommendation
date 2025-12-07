@@ -26,7 +26,6 @@ ENV
 # DVC related
 # ----------------------
 .dvc
-.dvc
 # Ignore data files if using DVC to track them
 raw
 processed

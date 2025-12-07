@@ -1,42 +1,82 @@
 import mlflow
 import mlflow.sklearn
-from src.data.load_data import load_ratings, load_movies
+import pickle
+import os
+import numpy as np
+from sklearn.metrics import mean_squared_error
+
+from src.data.load_data import load_ratings
 from src.features.build_features import create_user_item_matrix
-from src.models.train_model import train_knn
+from src.models.train_svd import train_svd
+
+
+def evaluate_svd(model_dict, matrix):
+    """
+    Compute RMSE on reconstruction of the user-item matrix.
+    """
+    user_factors = model_dict["user_factors"]
+    movie_factors = model_dict["movie_factors"]
+
+    reconstructed = user_factors @ movie_factors.T
+    true = matrix.values
+
+    # Only compare non-zero entries (movies rated)
+    mask = true > 0
+    rmse = np.sqrt(mean_squared_error(true[mask], reconstructed[mask]))
+    return rmse
+
 
 def main():
-    # Créer ou récupérer l'expérience MLflow
-    mlflow.set_experiment("movie-recommendation-knn")
+    mlflow.set_experiment("movie-recommendation-svd")
 
-    with mlflow.start_run(run_name="knn-v1"):
-        print("Chargement des données...")
-        ratings = load_ratings()
-        movies = load_movies()
+    print("Loading data...")
+    ratings = load_ratings()
+    matrix = create_user_item_matrix(ratings)
 
-        print("Création de la matrice utilisateur-item...")
-        matrix = create_user_item_matrix(ratings)
+    # -------------------------------
+    # 1️⃣ Hyperparameters to test
+    # -------------------------------
+    param_grid = [20, 50, 80, 120]  # try multiple embedding sizes
 
-        print("Entraînement du modèle KNN...")
-        model = train_knn(matrix, n_neighbors=30)
+    best_rmse = float("inf")
+    best_model = None
+    best_params = None
 
-        # Métriques utiles
-        n_users, n_items = matrix.shape
-        sparsity = 1 - (len(ratings) / (n_users * n_items))
+    print("Starting hyperparameter search...")
 
-        # Log dans MLflow
-        mlflow.log_param("n_neighbors", 30)
-        mlflow.log_param("n_users", n_users)
-        mlflow.log_param("n_items", n_items)
-        mlflow.log_metric("sparsity", sparsity)
+    for n_comp in param_grid:
+        with mlflow.start_run(run_name=f"SVD_{n_comp}"):
 
-        # Sauvegarde du modèle
-        mlflow.sklearn.log_model(model, "knn_model")
+            print(f"Training SVD with n_components={n_comp}...")
+            model_dict = train_svd(matrix, n_components=n_comp)
 
-        # Sauvegarde des données/movies pour référence
-        mlflow.log_artifact("data/raw/movies.csv", artifact_path="data")
+            rmse = evaluate_svd(model_dict, matrix)
 
-        print("Entraînement terminé !")
-        print(f"Run ID: {mlflow.active_run().info.run_id}")
+            # Log params & metrics
+            mlflow.log_param("n_components", n_comp)
+            mlflow.log_metric("rmse", rmse)
+
+            print(f"RMSE for n_components={n_comp}: {rmse}")
+
+            # Select best model
+            if rmse < best_rmse:
+                best_rmse = rmse
+                best_model = model_dict
+                best_params = n_comp
+
+    # -------------------------------
+    # 2️⃣ Save best model
+    # -------------------------------
+    print(f"Best model: n_components={best_params} with RMSE={best_rmse}")
+
+    os.makedirs("models", exist_ok=True)
+    model_path = "models/svd_model.pkl"
+
+    with open(model_path, "wb") as f:
+        pickle.dump(best_model, f)
+
+    print(f"Best model saved to {model_path}")
+
 
 if __name__ == "__main__":
     main()
